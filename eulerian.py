@@ -6,9 +6,16 @@
 # you would follow on an Eulerian Tour
 #
 # For example, if the input graph was
-graph = [(1,2),(1,3),(2,3),(3,4),(3,5),(4,5)]
+##graph = [(1,2),(1,3),(2,3),(3,4),(3,5),(4,5), (2,5),(2,6),(5,6),(1,7),(1,8),(2,7),(2,8)]
+##graph = [(1,2),(1,3),(2,3),(3,4),(3,5),(4,5), (2,5),(2,6),(5,6)]
+##graph = [(1,2),(1,3),(2,3),(3,4),(3,5),(4,5)]
 ##graph = [(1,2),(2,3),(3,1)]
 ##graph = [(1,2),(2,3),(3,4),(4,5),(1,5)]
+##graph =  [(1, 2), (1,4), (2, 3), (2,4), (2,5), (3,4), (3,5), (3,6), (4,6)]
+##graph = [(0, 1), (1, 5), (1, 7), (4, 5), (4, 8), (1, 6), (3, 7), (5, 9), (2, 4), (0, 4), (2, 5), (3, 6), (8, 9)]
+##graph = [(1, 2), (2, 3), (3, 4), (4, 5), (5, 1), (1, 3), (1, 4), (5, 2), (2, 4), (5, 3)]
+graph = [(1, 2), (2, 3), (4, 3), (5, 4), (5, 6), (6, 7), (7, 1), (2, 7), (7, 3), (1, 4), (4, 2), (5, 2), (1, 5), (6, 3), (6, 2)]
+
 # A possible Eulerian tour would be [1, 2, 3, 1]
 
 def nodeTour(tour):
@@ -32,64 +39,51 @@ def sortGraphEdges(graph):
         l.append(e)
     return l
 
-def deleteEdge(graph, edgeToDel):
-    l = []
-    for edge in graph:
-        if edge != edgeToDel:
-            l.append(edge)
-    return l
+#def deleteEdge(graph, edgeToDel):
+
 
 def testTour(graph, tour):
-    goodTour = True
-    if not graph:
-        return None
-    if not tour:
-        return None
+    goodTest = True
     for edge in graph:
         if edge not in tour:
-            goodTour = False
+            goodTest = False
     for edge in tour:
         if edge not in graph:
-            goodTour = False
-    if goodTour:
-        return tour
-    
-def recEul(graph, start, end):
-    nextEdges = filter( (lambda edge: edge[0] == start
-                         or edge[1] == start), graph)
-    print 'nextEdges', nextEdges
+            goodTest = False
+    return goodTest
+     
+def recEul(graph, traversed):
+    latestEdge = traversed[-1]
+    if len(traversed) == 1:
+        leadingNode = latestEdge[1]
+    else:
+        if latestEdge[0] in traversed[-2]:
+            leadingNode = latestEdge[1]
+        else:
+            leadingNode = latestEdge[0]
+    nextEdges = []
+    for edge in graph:
+        if edge not in traversed:
+            if edge[0] == leadingNode or edge[1] == leadingNode:
+                nextEdges.append(edge)
     for edge in nextEdges:
-        if [edge] == graph:
+        newTraversed = traversed + [edge]
+        if testTour(graph, newTraversed):
             return [edge]
     for edge in nextEdges:
-        newGraph = deleteEdge(graph, edge)
-        if edge[0] == end:
-            newStart = start
-            newEnd = edge[1]
-        elif edge[0] == start:
-            newStart = edge[1]
-            newEnd = end
-        elif edge[1] == end:
-            newEnd = edge[0]
-            newStart = start
-        else: #edge[1] == start
-            newStart = edge[0]
-            newEnd = end
-        print edge, newGraph, newStart, newEnd
-        if testTour(newGraph, recEul(newGraph, newStart, newEnd)):
-            return [edge] + recEul(newGraph, newStart, newEnd)
-    
+        newTraversed = traversed + [edge]
+        if recEul(graph, newTraversed):
+            if testTour(graph, newTraversed + recEul(graph, newTraversed)):
+                return newTraversed + recEul(graph, newTraversed)
+
+     
 def find_eulerian_tour(graph):
     graph = sortGraphEdges(graph)
-    print 'start:', graph
-    for edge in graph:
-        newGraph = deleteEdge(graph, edge)
-        start = edge[0]
-        end = edge[1]
-        print edge, newGraph, start, end
-        if testTour(newGraph, recEul(newGraph, start, end)):
-            tour = [edge] + recEul(newGraph, start, end)
-            print tour
-            return nodeTour(tour)
+    # pick a starting edge
+    edge = graph[0]
+    traversed = [edge]
+    tour = recEul(graph, traversed)
+    realTour = tour[-len(graph):]
+    return nodeTour(realTour)
 
 print find_eulerian_tour(graph)
