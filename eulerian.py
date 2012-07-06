@@ -6,7 +6,9 @@
 # you would follow on an Eulerian Tour
 #
 # For example, if the input graph was
-graph = [(1,2),(4,3),(2,3), (4,5), (5,1)]
+graph = [(1,2),(1,3),(2,3),(3,4),(3,5),(4,5)]
+##graph = [(1,2),(2,3),(3,1)]
+##graph = [(1,2),(2,3),(3,4),(4,5),(1,5)]
 # A possible Eulerian tour would be [1, 2, 3, 1]
 
 def nodeTour(tour):
@@ -53,18 +55,29 @@ def testTour(graph, tour):
         return tour
     
 def recEul(graph, start, end):
-    nextEdges = filter( (lambda edge: edge[0] == start or edge[1] == start), graph)
+    nextEdges = filter( (lambda edge: edge[0] == start
+                         or edge[1] == start), graph)
+    print 'nextEdges', nextEdges
     for edge in nextEdges:
-        if edge[0] == end or edge[1] == end:
+        if [edge] == graph:
             return [edge]
     for edge in nextEdges:
         newGraph = deleteEdge(graph, edge)
-        if edge[0] == start:
+        if edge[0] == end:
+            newStart = start
+            newEnd = edge[1]
+        elif edge[0] == start:
             newStart = edge[1]
-        else:
+            newEnd = end
+        elif edge[1] == end:
+            newEnd = edge[0]
+            newStart = start
+        else: #edge[1] == start
             newStart = edge[0]
-        if testTour(newGraph, recEul(newGraph, newStart, end)):
-            return [edge] + recEul(newGraph, newStart, end)
+            newEnd = end
+        print edge, newGraph, newStart, newEnd
+        if testTour(newGraph, recEul(newGraph, newStart, newEnd)):
+            return [edge] + recEul(newGraph, newStart, newEnd)
     
 def find_eulerian_tour(graph):
     graph = sortGraphEdges(graph)
@@ -73,8 +86,10 @@ def find_eulerian_tour(graph):
         newGraph = deleteEdge(graph, edge)
         start = edge[0]
         end = edge[1]
+        print edge, newGraph, start, end
         if testTour(newGraph, recEul(newGraph, start, end)):
             tour = [edge] + recEul(newGraph, start, end)
+            print tour
             return nodeTour(tour)
 
 print find_eulerian_tour(graph)
